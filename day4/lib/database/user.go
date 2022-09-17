@@ -1,0 +1,54 @@
+package database
+
+import (
+	"github.com/JoshEvan/alterra-agmc-day4/config"
+	"github.com/JoshEvan/alterra-agmc-day4/middlewares"
+	"github.com/JoshEvan/alterra-agmc-day4/models"
+)
+
+func DeleteUserByID(id int) (err error) {
+	if err := config.DB.Delete(&models.User{}, id).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func UpdateUserByID(id int, updatedUser models.User) (err error) {
+	if err := config.DB.Model(&updatedUser).Where("id = ?", id).Updates(updatedUser).Error; err != nil {
+		return err
+	}
+	return
+}
+
+func AddUserByID(newUser models.User) (err error) {
+	if err := config.DB.Create(&newUser).Error; err != nil {
+		return err
+	}
+	return
+}
+
+func GetUserByID(id int) (user models.User, err error) {
+	if err := config.DB.Where("id = ?", id).First(&user).Error; err != nil {
+		return models.User{}, err
+	}
+	return user, nil
+}
+
+func GetUsers() (users []models.User, err error) {
+	err = config.DB.Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return
+}
+
+func LoginUser(userInput models.User) (user *models.User, err error) {
+	if err = config.DB.Where("email = ? AND password = ?", userInput.Email, userInput.Password).First(&user).Error; err != nil {
+		return nil, err
+	}
+	user.Token, err = middlewares.CreateToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
